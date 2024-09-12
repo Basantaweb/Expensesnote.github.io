@@ -1,1 +1,79 @@
-html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do & Expense Tracker (CRUD with Responsive Tables)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>To-Do & Expense Tracker (CRUD)</h1>
+
+    <!-- To-Do Section -->
+    <div class="todo-section">
+      <h2>To-Do List</h2>
+      <form id="todo-form">
+        <input type="hidden" id="todo-id">
+        <input type="text" id="todo-input" placeholder="Add a To-Do" required>
+        <input type="date" id="todo-date" disabled>
+        <input type="checkbox" id="enable-date" onchange="toggleDateInput()"> Edit Date
+        <button type="submit" id="todo-submit-btn">Add To-Do</button>
+      </form>
+
+      <table class="responsive-table" id="todo-table">
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="todo-list">
+          <!-- To-Do items will be appended here -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Expense Section -->
+    <div class="expense-section">
+      <h2>Expenses</h2>
+      <form id="expense-form">
+        <input type="hidden" id="expense-id">
+        <input type="text" id="expense-item" placeholder="Expense Item" required>
+        <input type="number" id="expense-amount" placeholder="Amount" required>
+        <select id="expense-category" required>
+          <!-- Options will be populated by JavaScript -->
+        </select>
+        <input type="date" id="expense-date" disabled>
+        <input type="checkbox" id="enable-expense-date" onchange="toggleExpenseDateInput()"> Edit Date
+        <button type="submit" id="expense-submit-btn">Add Expense</button>
+      </form>
+
+      <table class="responsive-table" id="expense-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="expense-list">
+          <!-- Expense items will be appended here -->
+        </tbody>
+      </table>
+
+      <h3>Total: $<span id="total-expense">0</span></h3>
+    </div>
+
+    <!-- Export, Share, and Send API Buttons -->
+    <button id="export-json">Export as JSON</button>
+    <button id="share-json">Share JSON Text</button>
+    <button id="send-api">Send Data to API</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
