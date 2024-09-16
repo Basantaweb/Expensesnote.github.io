@@ -1,331 +1,251 @@
-let todos = [];
-let expenses = [];
-let total = 0;
-let editingTodoId = null;
-let editingExpenseId = null;
+document.addEventListener('DOMContentLoaded', function () {
+  const todoForm = document.getElementById('todoForm');
+  const todoTableBody = document.querySelector('#todoTable tbody');
+  const expenseForm = document.getElementById('expenseForm');
+  const expenseTableBody = document.querySelector('#expenseTable tbody');
 
-// Initialize date input with the current date
-function initializeDateInput() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-  const day = String(now.getDate()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
-  document.getElementById('todo-date').value = dateStr;
-}
+  const sendDataButton = document.getElementById('sendDataButton');
+  const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
 
-initializeDateInput();
-
-// Initialize expense date input with the current date
-function initializeExpenseDateInput() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
-  const day = String(now.getDate()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
-  document.getElementById('expense-date').value = dateStr;
-}
-
-initializeExpenseDateInput();
-
-// Toggle date input enable/disable
-function toggleDateInput() {
-  const dateInput = document.getElementById('todo-date');
-  const isChecked = document.getElementById('enable-date').checked;
-  dateInput.disabled = !isChecked;
-}
-
-// Toggle expense date input enable/disable
-function toggleExpenseDateInput() {
-  const dateInput = document.getElementById('expense-date');
-  const isChecked = document.getElementById('enable-expense-date').checked;
-  dateInput.disabled = !isChecked;
-}
-
-// Populate category options dynamically
-const categories = ['vegetables', 'sweets', 'grocery', 'travel', 'bus', 'petrol', 'train', 'other'];
-const expenseCategorySelect = document.getElementById('expense-category');
-
-categories.forEach(category => {
-  const option = document.createElement('option');
-  option.value = category;
-  option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-  expenseCategorySelect.appendChild(option);
-});
-
-// To-Do List functionality
-const todoForm = document.getElementById('todo-form');
-const todoInput = document.getElementById('todo-input');
-const todoDateInput = document.getElementById('todo-date');
-const todoSubmitBtn = document.getElementById('todo-submit-btn');
-const todoList = document.getElementById('todo-list');
-
-todoForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const todoText = todoInput.value;
-  const todoDate = todoDateInput.value;
-
-  if (todoText) {
-    if (editingTodoId === null) {
-      createToDoItem(todoText, todoDate);
-    } else {
-      updateToDoItem(todoText, todoDate);
-    }
-    todoInput.value = ''; // Clear input field
-    todoDateInput.value = initializeDateInput(); // Reset date input to current date
-  }
-});
-
-function createToDoItem(todoText, todoDate) {
-  const id = todos.length + 1;
-  const todo = { id, task: todoText, date: todoDate, completed: false };
-  todos.push(todo);
-  renderToDoItem(todo);
-}
-
-function renderToDoItem(todo) {
-  const tr = document.createElement('tr');
-  tr.id = `todo-${todo.id}`;
-
-  const tdTask = document.createElement('td');
-  tdTask.textContent = todo.task;
-  tdTask.setAttribute('data-label', 'Task');
-
-  const tdDate = document.createElement('td');
-  tdDate.textContent = todo.date;
-  tdDate.setAttribute('data-label', 'Date');
-
-  const tdActions = document.createElement('td');
-  tdActions.setAttribute('data-label', 'Actions');
-
-  const updateBtn = document.createElement('button');
-  updateBtn.textContent = 'Update';
-  updateBtn.onclick = () => {
-    editingTodoId = todo.id;
-    todoInput.value = todo.task;
-    todoDateInput.value = todo.date;
-    document.getElementById('enable-date').checked = true;
-    toggleDateInput(); // Enable date input
-    todoSubmitBtn.textContent = 'Update To-Do';
-  };
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = 'Delete';
-  deleteBtn.onclick = () => deleteToDoItem(todo.id);
-
-  tdActions.appendChild(updateBtn);
-  tdActions.appendChild(deleteBtn);
-
-  tr.appendChild(tdTask);
-  tr.appendChild(tdDate);
-  tr.appendChild(tdActions);
-  todoList.appendChild(tr);
-}
-
-function updateToDoItem(newTask, newDate) {
-  const todo = todos.find(t => t.id === editingTodoId);
-  todo.task = newTask;
-  todo.date = newDate;
-  
-  document.querySelector(`#todo-${editingTodoId} td[data-label="Task"]`).textContent = newTask;
-  document.querySelector(`#todo-${editingTodoId} td[data-label="Date"]`).textContent = newDate;
-  
-  editingTodoId = null;
-  document.getElementById('enable-date').checked = false; // Uncheck the checkbox
-  toggleDateInput(); // Disable date input
-  todoSubmitBtn.textContent = 'Add To-Do'; // Reset button text
-}
-
-function deleteToDoItem(id) {
-  todos = todos.filter(t => t.id !== id);
-  const tr = document.getElementById(`todo-${id}`);
-  todoList.removeChild(tr);
-}
-
-// Expense functionality
-const expenseForm = document.getElementById('expense-form');
-const expenseItem = document.getElementById('expense-item');
-const expenseAmount = document.getElementById('expense-amount');
-const expenseCategory = document.getElementById('expense-category');
-const expenseDateInput = document.getElementById('expense-date');
-const expenseSubmitBtn = document.getElementById('expense-submit-btn');
-const expenseList = document.getElementById('expense-list');
-const totalExpense = document.getElementById('total-expense');
-
-expenseForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const item = expenseItem.value;
-  const amount = parseFloat(expenseAmount.value);
-  const category = expenseCategory.value;
-  const date = expenseDateInput.value;
-
-  if (item && amount) {
-    if (editingExpenseId === null) {
-      createExpenseItem(item, amount, category, date);
-    } else {
-      updateExpenseItem(item, amount, category, date);
-    }
-    expenseItem.value = ''; // Clear input field
-    expenseAmount.value = ''; // Clear input field
-    expenseCategory.value = ''; // Clear select field
-    expenseDateInput.value = initializeExpenseDateInput(); // Reset date input to current date
-  }
-});
-
-function createExpenseItem(item, amount, category, date) {
-  const id = expenses.length + 1;
-  const expense = { id, item, amount, category, date };
-  expenses.push(expense);
-  renderExpenseItem(expense);
-}
-
-function renderExpenseItem(expense) {
-  const tr = document.createElement('tr');
-  tr.id = `expense-${expense.id}`;
-
-  const tdItem = document.createElement('td');
-  tdItem.textContent = expense.item;
-  tdItem.setAttribute('data-label', 'Item');
-
-  const tdAmount = document.createElement('td');
-  tdAmount.textContent = `$${expense.amount.toFixed(2)}`;
-  tdAmount.setAttribute('data-label', 'Amount');
-
-  const tdCategory = document.createElement('td');
-  tdCategory.textContent = expense.category;
-  tdCategory.setAttribute('data-label', 'Category');
-
-  const tdDate = document.createElement('td');
-  tdDate.textContent = expense.date;
-  tdDate.setAttribute('data-label', 'Date');
-
-  const tdActions = document.createElement('td');
-  tdActions.setAttribute('data-label', 'Actions');
-
-  const updateBtn = document.createElement('button');
-  updateBtn.textContent = 'Update';
-  updateBtn.onclick = () => {
-    editingExpenseId = expense.id;
-    expenseItem.value = expense.item;
-    expenseAmount.value = expense.amount;
-    expenseCategory.value = expense.category;
-    expenseDateInput.value = expense.date;
-    document.getElementById('enable-expense-date').checked = true;
-    toggleExpenseDateInput(); // Enable date input
-    expenseSubmitBtn.textContent = 'Update Expense';
-  };
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.textContent = 'Delete';
-  deleteBtn.onclick = () => deleteExpenseItem(expense.id, expense.amount);
-
-  tdActions.appendChild(updateBtn);
-  tdActions.appendChild(deleteBtn);
-
-  tr.appendChild(tdItem);
-  tr.appendChild(tdAmount);
-  tr.appendChild(tdCategory);
-  tr.appendChild(tdDate);
-  tr.appendChild(tdActions);
-  expenseList.appendChild(tr);
-
-  updateTotal(expense.amount);
-}
-
-function updateExpenseItem(newItem, newAmount, newCategory, newDate) {
-  const expense = expenses.find(e => e.id === editingExpenseId);
-  
-  updateTotal(-expense.amount); // Subtract old amount
-  expense.item = newItem;
-  expense.amount = newAmount;
-  expense.category = newCategory;
-  expense.date = newDate;
-  
-  document.querySelector(`#expense-${editingExpenseId} td[data-label="Item"]`).textContent = newItem;
-  document.querySelector(`#expense-${editingExpenseId} td[data-label="Amount"]`).textContent = `$${newAmount.toFixed(2)}`;
-  document.querySelector(`#expense-${editingExpenseId} td[data-label="Category"]`).textContent = newCategory;
-  document.querySelector(`#expense-${editingExpenseId} td[data-label="Date"]`).textContent = newDate;
-  
-  updateTotal(newAmount); // Add new amount
-  
-  editingExpenseId = null;
-  document.getElementById('enable-expense-date').checked = false; // Uncheck the checkbox
-  toggleExpenseDateInput(); // Disable date input
-  expenseSubmitBtn.textContent = 'Add Expense'; // Reset button text
-}
-
-function deleteExpenseItem(id, amount) {
-  expenses = expenses.filter(e => e.id !== id);
-  const tr = document.getElementById(`expense-${id}`);
-  expenseList.removeChild(tr);
-  updateTotal(-amount);
-}
-
-function updateTotal(amount) {
-  total += amount;
-  totalExpense.textContent = total.toFixed(2);
-}
-
-// Export as JSON
-document.getElementById('export-json').addEventListener('click', () => {
-  const data = {
-    todos: todos,
-    expenses: expenses,
-    totalExpense: total
-  };
-
-  const jsonString = JSON.stringify(data, null, 2);
-  downloadJSON(jsonString, 'todo-expenses-data.json');
-});
-
-// Share JSON via WhatsApp
-document.getElementById('share-json').addEventListener('click', () => {
-  const data = {
-    todos: todos,
-    expenses: expenses,
-    totalExpense: total
-  };
-
-  // Convert JSON to a text format with a limit of 1000 characters for practical sharing
-  const jsonString = JSON.stringify(data, null, 2);
-  const textMessage = jsonString.substring(0, 1000); // Limit the message length
-
-  const encodedMessage = encodeURIComponent(textMessage);
-  const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
-
-  window.open(whatsappUrl, '_blank');
-});
-
-// Send data to API
-document.getElementById('send-api').addEventListener('click', () => {
-  const data = {
-    todos: todos,
-    expenses: expenses,
-    totalExpense: total
-  };
-
-  fetch('https://example.com/api', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => response.json())
-  .then(result => {
-    alert('Data sent successfully!');
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Failed to send data.');
+  const categories = ['vegetables', 'sweets', 'grocery', 'travel', 'bus', 'petrol', 'train', 'other'];
+  const expenseCategorySelect = document.getElementById('expense-category');
+  categories.forEach(category => {
+      const option = document.createElement('option');
+      option.value = category;
+      option.textContent = category;
+      expenseCategorySelect.appendChild(option);
   });
+
+  let todos = [];
+  let expenses = [];
+
+  // Helper Functions
+  function clearForm(form) {
+      form.reset();
+  }
+
+  function generateDateInput() {
+      const now = new Date();
+      return now.toISOString().substring(0, 16);
+  }
+
+  window.onload = document.getElementById('todoDate').value = generateDateInput();
+  window.onload = document.getElementById('expenseDate').value = generateDateInput();
+
+  // Enable Date Editing Checkboxes
+  document.getElementById('enableTodoDate').addEventListener('change', function () {
+      document.getElementById('todoDate').disabled = !this.checked;
+      if (!this.checked) {
+          document.getElementById('todoDate').value = generateDateInput();
+      }
+  });
+
+  document.getElementById('enableExpenseDate').addEventListener('change', function () {
+      document.getElementById('expenseDate').disabled = !this.checked;
+      if (!this.checked) {
+          document.getElementById('expenseDate').value = generateDateInput();
+      }
+  });
+
+  // Create and Read (Todo)
+  todoForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const todoText = document.getElementById('todoInput').value;
+      const todoDate = document.getElementById('todoDate').value || generateDateInput();
+
+      const newTodo = { id: Date.now(), text: todoText, date: todoDate };
+      todos.push(newTodo);
+
+      renderTodos();
+      clearForm(todoForm);
+  });
+
+  function renderTodos() {
+      todoTableBody.innerHTML = '';
+      todos.forEach(todo => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+              <td>${todo.text}</td>
+              <td>${todo.date}</td>
+              <td>
+                  <button class="btn-edit" data-id="${todo.id}">Edit</button>
+                  <button class="btn-delete" data-id="${todo.id}">Delete</button>
+              </td>
+          `;
+          todoTableBody.appendChild(row);
+      });
+  }
+
+  // Create and Read (Expense)
+  expenseForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const expenseDescription = document.getElementById('expenseInput').value;
+      const expenseAmount = document.getElementById('expenseAmount').value;
+      const expenseCategory = document.getElementById('expense-category').value;
+      const expenseDate = document.getElementById('expenseDate').value || generateDateInput();
+
+      const newExpense = { id: Date.now(), description: expenseDescription, amount: expenseAmount, category: expenseCategory, date: expenseDate };
+      expenses.push(newExpense);
+
+      renderExpenses();
+      clearForm(expenseForm);
+  });
+
+  function renderExpenses() {
+      expenseTableBody.innerHTML = '';
+      expenses.forEach(expense => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+              <td>${expense.description}</td>
+              <td>${expense.amount}</td>
+              <td>${expense.category}</td>
+              <td>${expense.date}</td>
+              <td>
+                  <button class="btn-edit" data-id="${expense.id}">Edit</button>
+                  <button class="btn-delete" data-id="${expense.id}">Delete</button>
+              </td>
+          `;
+          expenseTableBody.appendChild(row);
+      });
+  }
+
+  // Update and Delete (Todo)
+  todoTableBody.addEventListener('click', function (e) {
+      if (e.target.classList.contains('btn-edit')) {
+          const id = e.target.getAttribute('data-id');
+          const todo = todos.find(todo => todo.id === parseInt(id));
+
+          document.getElementById('todoInput').value = todo.text;
+          document.getElementById('todoDate').value = todo.date;
+          todos = todos.filter(todo => todo.id !== parseInt(id)); // Remove old entry
+          renderTodos(); // Re-render list
+      }
+
+      if (e.target.classList.contains('btn-delete')) {
+          const id = e.target.getAttribute('data-id');
+          todos = todos.filter(todo => todo.id !== parseInt(id)); // Remove selected todo
+          renderTodos(); // Re-render list
+      }
+  });
+
+  // Update and Delete (Expense)
+  expenseTableBody.addEventListener('click', function (e) {
+      if (e.target.classList.contains('btn-edit')) {
+          const id = e.target.getAttribute('data-id');
+          const expense = expenses.find(expense => expense.id === parseInt(id));
+
+          document.getElementById('expenseInput').value = expense.description;
+          document.getElementById('expenseAmount').value = expense.amount;
+          document.getElementById('expense-category').value = expense.category;
+          document.getElementById('expenseDate').value = expense.date;
+          expenses = expenses.filter(expense => expense.id !== parseInt(id)); // Remove old entry
+          renderExpenses(); // Re-render list
+      }
+
+      if (e.target.classList.contains('btn-delete')) {
+          const id = e.target.getAttribute('data-id');
+          expenses = expenses.filter(expense => expense.id !== parseInt(id)); // Remove selected expense
+          renderExpenses(); // Re-render list
+      }
+  });
+
+  // Send Data to API (CRUD)
+  sendDataButton.addEventListener('click', async function () {
+    try {
+        // Example: Sending Todos and Expenses Data to API
+        const data = { todos, expenses };
+
+        // Check if both todos and expenses arrays are empty
+        if (todos.length === 0 && expenses.length === 0) {
+            Swal.fire('Error', 'No data to send. Please add Todos or Expenses.', 'error');
+            return;
+        }
+
+        console.log(data);
+        const response = await fetch('https://example.com/api/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            Swal.fire('Success', 'Data sent to API successfully!', 'success');
+        } else {
+            throw new Error('Failed to send data to API');
+        }
+    } catch (error) {
+        Swal.fire('Error', error.message, 'error');
+    }
 });
 
-// Function to trigger download of JSON file
-function downloadJSON(jsonString, filename) {
-  const blob = new Blob([jsonString], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
+  // Send Data to WhatsApp
+  sendWhatsAppButton.addEventListener('click', function () {
+      const message = `Todos:\n${todos.map(todo => `${todo.text} - ${todo.date}`).join('\n')}\n\nExpenses:\n${expenses.map(expense => `${expense.description}, $${expense.amount}, ${expense.category} - ${expense.date}`).join('\n')}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+  });
+
+  window.showTab = function (tabName) {
+      const tabs = document.getElementsByClassName('tab-content');
+      for (let i = 0; i < tabs.length; i++) {
+          tabs[i].style.display = 'none';
+      }
+      document.getElementById(tabName).style.display = 'block';
+      sendDataButton.style.display = 'block';
+      sendWhatsAppButton.style.display = 'block';
+  };
+
+  function showMainPage() {
+      loginPage.style.display = 'none';
+      mainPage.style.display = 'block';
+  }
+
+  function showLoginPage() {
+      loginPage.style.display = 'block';
+      mainPage.style.display = 'none';
+  }
+
+  // Handle Login Logic with SweetAlert
+  loginForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+          const response = await fetch('https://example.com/api/login', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ username, password })
+          });
+
+          if (!response.ok) {
+              throw new Error('Login failed');
+          }
+
+          const result = await response.json();
+          if (result.token) {
+              localStorage.setItem('authToken', result.token);
+              Swal.fire('Success', 'Logged in successfully!', 'success').then(() => {
+                  showMainPage();
+              });
+          } else {
+              throw new Error('Invalid credentials');
+          }
+      } catch (error) {
+          Swal.fire('Error', error.message, 'error');
+      }
+  });
+
+  const authToken = localStorage.getItem('authToken');
+  //if (authToken) {
+      showMainPage();
+  // } else {
+  //     showLoginPage();
+  // }
+});
