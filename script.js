@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('expenseDate').value = generateDateInput();
         }
     });
+    
 
     // Create and Read (Expense)
     expenseForm.addEventListener('submit', function (e) {
@@ -65,9 +66,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderExpenses() {
         expenseTableBody.innerHTML = '';
-        expenses.forEach(expense => {
+        expenses.forEach((expense, index) => {
             const row = document.createElement('tr');
+            row.setAttribute('draggable', true);
             row.innerHTML = `
+                <td>${index + 1}</td> <!-- Serial Number -->
                 <td>${expense.description}</td>
                 <td>₹${expense.amount.toFixed(2)}</td>
                 <td>${expense.category}</td>
@@ -78,6 +81,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 </td>
             `;
             expenseTableBody.appendChild(row);
+
+            addDragEventListeners(row);
         });
 
         // Update the total in the table footer
@@ -115,6 +120,48 @@ document.addEventListener('DOMContentLoaded', function () {
             renderExpenses(); // Re-render list
         }
     });
+
+    // Drag-and-Drop Implementation
+    let draggedRow = null;
+
+    function addDragEventListeners(row) {
+        row.addEventListener('dragstart', function (e) {
+            draggedRow = row;
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        row.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+
+        row.addEventListener('drop', function (e) {
+            e.preventDefault();
+            if (draggedRow !== this) {
+                const allRows = [...expenseTableBody.querySelectorAll('tr')];
+                const draggedIndex = allRows.indexOf(draggedRow);
+                const targetIndex = allRows.indexOf(this);
+
+                // Reorder expenses array
+                const movedExpense = expenses.splice(draggedIndex, 1)[0];
+                expenses.splice(targetIndex, 0, movedExpense);
+
+                renderExpenses(); // Re-render the table
+            }
+        });
+
+        row.addEventListener('dragend', function () {
+            draggedRow = null;
+        });
+    }
+
+    // Update the serial numbers in the first column
+    function updateSerialNumbers() {
+        const rows = expenseTableBody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+            row.querySelector('td:first-child').textContent = index + 1;
+        });
+    }
 
     // Send Data to API (CRUD)
     sendDataButton.addEventListener('click', async function () {
